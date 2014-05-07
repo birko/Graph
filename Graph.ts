@@ -141,19 +141,53 @@
         }
 
         //shoortest path from point
-        dijsktra(point: Point): { dist: Array<number>; previous: Array<Point> } {
-            var result = { dist: new Array(), previous: new Array() };
+        dijsktra(point: Point, weightFunction:(edge: Edge): number): { weight: Array<number>; previous: Array<Point> } {
+            var result = { weight: new Array(), previous: new Array() };
             var infinity = 18437736874454810627;
+            var pointQueue = new Array();
+            //init result
             this.points.forEach(function (value: Point, index: number) {
-                result.dist[value.toString()] = infinity;
+                result.weight[value.toString()] = infinity;
                 result.previous[value.toString()] = undefined;
+                pointQueue[] = value;
             });
-            result[point.toString()] = 0;
+            
+            result.weight[point.toString()] = 0;
+            //sort pointQueue according result.weight
+            pointQueue.sort(function(p1, p2) {
+                return (result.weight[p1.toString()] - result.weight[p2.toString()]);
+            });
+            
+            while(pointQueue.length > 0) {
+                var u = pointQueue.slice(0, 1)[0]; //get first point(with lowest weight)
+                if(result.weight[u.toString()] == infinity) {
+                    break;
+                }
+                
+                //for each edges from point
+                u.edges.forEach(function (value: Edge, index: number) {
+                    //if endpoint was not removed from pointQueue
+                    var index = pointQueue.indexOf(value.endPoint);
+                    if (index !== -1) {
+                        //compare weights
+                        var alt = result.weight[u.toString()] + weightFunction(value);
+                        if (alt < result.weight[u.toString()]) {
+                            result.weight[value.endPoint] = alt;
+                            result.previous[value.endPoint] = u;
+                            //sort reduced pointQueue according result.weight
+                            pointQueue.sort(function(p1, p2) {
+                                return (result.weight[p1.toString()] - result.weight[p2.toString()]);
+                            });
+                        }
+                    }
+                });
+            }
+            
             return result;
         }
 
         //shortest path for all points
-        flojdWarsshall() {
+        floydWarsshall(weightFunction:(edge: Edge): number) {
         }
 
         //minimum spanning tree
