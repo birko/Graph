@@ -249,11 +249,24 @@
             
             return result;
         }
-        
-        
 
         //minimum spanning tree
-        kruskal() {
+        kruskal(weightFunction:(edge: Edge)) {
+            var edges = new Array();
+            this.edges.forEach(function(value: Edge, index: number){
+                edges[] = value;
+            });
+            edges.sort(function(e1, e2) {
+                return (weightFunction(e1) - weightFunction(e2));
+            });
+            var result = new Graph();
+            edges.forEach(function(value: Edge, index: number){
+                if (!(result.hasPoint(value.startPoint) && result.hasPoint(value.endPoint))) {
+                    result.addEdge(value);
+                }
+            });
+            
+            return result;
         }
     }
 }
