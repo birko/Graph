@@ -142,8 +142,8 @@
 
         //shoortest path from point
         dijsktra(point: Point, weightFunction:(edge: Edge): number): { weight: Array<number>; previous: Array<Point> } {
-            var result = { weight: new Array(), previous: new Array() };
             var infinity = 18437736874454810627;
+            var result = { weight: new Array(), previous: new Array() };
             var pointQueue = new Array();
             //init result
             this.points.forEach(function (value: Point, index: number) {
@@ -187,8 +187,70 @@
         }
 
         //shortest path for all points
-        floydWarsshall(weightFunction:(edge: Edge): number) {
+        floydWarsshall(weightFunction:(edge: Edge): number): { weight: Array<Array<number>>; next: Array<Array<Point>> } {
+            var infinity = 18437736874454810627;
+            var result = { weight: new Array(), next: new Array() };
+            //init result
+            this.points.forEach(function (value: Point, index: number) {
+                this.points.forEach(function (value2: Point, index2: number) {
+                    result.weight[value.toString()][value2.toString()] = undefined;
+                    result.next[value.toString()][value2.toString()] = undefined;
+                });
+            });
+            // the weight of the edge (u,v)
+            this.edges.forEach(function (value: Edge, index: number) {
+                result.weight[value.startPoint.toString()][value.endPoint.toString()] = weightFunction(value);
+            });
+            
+            // standard Floyd-Warshall implementation
+            this.points.forEach(function (value: Point, index: number) {
+                this.points.forEach(function (value2: Point, index2: number) {
+                    this.points.forEach(function (value3: Point, index3: number) {
+                        var alt = (result.weight[value2.toString()][value.toString()] + result.weight[value.toString()][value3.toString()]);
+                        if (alt < result.weight[value2.toString()][value3.toString()]) {
+                            result.weight[value2.toString()][value3.toString()] = alt;
+                        }
+                    });
+                });
+            });
+            
+            this.points.forEach(function (value: Point, index: number) {
+                result.next[value.toString()][value.toString()] = 0;
+                result = this.floydWarsshallShortestPaths(value, value, weightFunction, result);
+            });
+            
+            return result;
         }
+        
+        floydWarsshallShortestPaths(start: Point, end: Point, weightFunction:(edge: Edge), data: { weight: Array<Array<number>>; next: Array<Array<Point>> }): { weight: Array<Array<number>>; next: Array<Array<Point>> } {
+            start.edges.forEach(function(value: Edge, index: number){
+                var alt = weightFunction(value) + result.weight[start.toSting()][end.toString()];
+                if (( result.weight[value.endPoint.toSting()][end.toString()] == alt && 
+                     result.next[start.toSting()][value.endPoint.toString()] == undefined
+                )) {
+                    result.next[value.endPoint.toSting()][end.toString()] = start;
+                    result = this.floydWarsshallShortestPaths(value.endPoint, end, weightFunction, result);
+                }
+            });
+            
+            return data;
+        }
+        
+        floydWarsshallShortestPath(start: Point, end: Point, data: { weight: Array<Array<number>>; next: Array<Array<Point>> }): Array<Point> {
+            var result = new Array();
+            if (result.next[start.toSting()][end.toString()] == undefined) {
+                return result;
+            }
+            result[] = start;
+            while(start != end){
+                start = result.next[start.toSting()][end.toString()];
+                result[] = start;
+            }
+            
+            return result;
+        }
+        
+        
 
         //minimum spanning tree
         kruskal() {
