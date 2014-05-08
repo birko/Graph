@@ -50,6 +50,14 @@
             }
             return undefined;
         }
+
+        copy(value: Point) : Point {
+            this.x = value.x;
+            this.y = value.y;
+            this.z = value.z;
+
+            return this;
+        }
     }
 
     export class Edge {
@@ -66,9 +74,18 @@
         toString():string {
             return "[" + this.startPoint.toString() + this.endPoint.toString() + "]";
         }
+
+        copy(value: Edge): Edge {
+            this.startPoint.copy(value.startPoint);
+            this.endPoint.copy(value.endPoint);
+            this.unidirected = value.unidirected;
+
+            return this;
+        }
     }
 
     export class Graph {
+        public static infinity = 18437736874454810627;
         public points: Array<Point> = new Array();
         public edges: Array<Edge> = new Array();
 
@@ -141,15 +158,14 @@
         }
 
         //shoortest path from point
-        dijsktra(point: Point, weightFunction:(edge: Edge): number): { weight: Array<number>; previous: Array<Point> } {
-            var infinity = 18437736874454810627;
+        dijsktra(point: Point, weightFunction:(edge: Edge) => number): { weight: Array<number>; previous: Array<Point> } {
             var result = { weight: new Array(), previous: new Array() };
             var pointQueue = new Array();
             //init result
             this.points.forEach(function (value: Point, index: number) {
-                result.weight[value.toString()] = infinity;
+                result.weight[value.toString()] = Graph.infinity;
                 result.previous[value.toString()] = undefined;
-                pointQueue[] = value;
+                pointQueue[index] = value;
             });
             
             result.weight[point.toString()] = 0;
@@ -160,7 +176,7 @@
             
             while(pointQueue.length > 0) {
                 var u = pointQueue.slice(0, 1)[0]; //get first point(with lowest weight)
-                if(result.weight[u.toString()] == infinity) {
+                if (result.weight[u.toString()] == Graph.infinity) {
                     break;
                 }
                 
@@ -172,8 +188,8 @@
                         //compare weights
                         var alt = result.weight[u.toString()] + weightFunction(value);
                         if (alt < result.weight[u.toString()]) {
-                            result.weight[value.endPoint] = alt;
-                            result.previous[value.endPoint] = u;
+                            result.weight[value.endPoint.toString()] = alt;
+                            result.previous[value.endPoint.toString()] = u;
                             //sort reduced pointQueue according result.weight
                             pointQueue.sort(function(p1, p2) {
                                 return (result.weight[p1.toString()] - result.weight[p2.toString()]);
@@ -187,13 +203,12 @@
         }
 
         //shortest path for all points
-        floydWarsshall(weightFunction:(edge: Edge): number): { weight: Array<Array<number>>; next: Array<Array<Point>> } {
-            var infinity = 18437736874454810627;
+        floydWarsshall(weightFunction:(edge: Edge) => number): { weight: Array<Array<number>>; next: Array<Array<Point>> } {
             var result = { weight: new Array(), next: new Array() };
             //init result
             this.points.forEach(function (value: Point, index: number) {
                 this.points.forEach(function (value2: Point, index2: number) {
-                    result.weight[value.toString()][value2.toString()] = undefined;
+                    result.weight[value.toString()][value2.toString()] = Graph.infinity;
                     result.next[value.toString()][value2.toString()] = undefined;
                 });
             });
@@ -222,14 +237,14 @@
             return result;
         }
         
-        floydWarsshallShortestPaths(start: Point, end: Point, weightFunction:(edge: Edge), data: { weight: Array<Array<number>>; next: Array<Array<Point>> }): { weight: Array<Array<number>>; next: Array<Array<Point>> } {
+        floydWarsshallShortestPaths(start: Point, end: Point, weightFunction:(edge: Edge) => number, data: { weight: Array<Array<number>>; next: Array<Array<Point>> }): { weight: Array<Array<number>>; next: Array<Array<Point>> } {
             start.edges.forEach(function(value: Edge, index: number){
-                var alt = weightFunction(value) + result.weight[start.toSting()][end.toString()];
-                if (( result.weight[value.endPoint.toSting()][end.toString()] == alt && 
-                     result.next[start.toSting()][value.endPoint.toString()] == undefined
+                var alt = weightFunction(value) + data.weight[start.toString()][end.toString()];
+                if (( data.weight[value.endPoint.toString()][end.toString()] == alt && 
+                     data.next[start.toString()][value.endPoint.toString()] == undefined
                 )) {
-                    result.next[value.endPoint.toSting()][end.toString()] = start;
-                    result = this.floydWarsshallShortestPaths(value.endPoint, end, weightFunction, result);
+                    data.next[value.endPoint.toString()][end.toString()] = start;
+                    data = this.floydWarsshallShortestPaths(value.endPoint, end, weightFunction, data);
                 }
             });
             
@@ -238,23 +253,23 @@
         
         floydWarsshallShortestPath(start: Point, end: Point, data: { weight: Array<Array<number>>; next: Array<Array<Point>> }): Array<Point> {
             var result = new Array();
-            if (result.next[start.toSting()][end.toString()] == undefined) {
+            if (data.next[start.toString()][end.toString()] == undefined) {
                 return result;
             }
-            result[] = start;
+            result[0] = start;
             while(start != end){
-                start = result.next[start.toSting()][end.toString()];
-                result[] = start;
+                start = data.next[start.toString()][end.toString()];
+                result.push(start);
             }
             
             return result;
         }
 
         //minimum spanning tree
-        kruskal(weightFunction:(edge: Edge)) {
+        kruskal(weightFunction:(edge: Edge) => number) {
             var edges = new Array();
             this.edges.forEach(function(value: Edge, index: number){
-                edges[] = value;
+                edges[index] = value;
             });
             edges.sort(function(e1, e2) {
                 return (weightFunction(e1) - weightFunction(e2));
@@ -262,7 +277,23 @@
             var result = new Graph();
             edges.forEach(function(value: Edge, index: number){
                 if (!(result.hasPoint(value.startPoint) && result.hasPoint(value.endPoint))) {
-                    result.addEdge(value);
+                    var start = undefined;
+                    var end = undefined;
+
+                    if (result.hasPoint(value.startPoint)) {
+                        start = result.points[value.startPoint.toString()];
+                    } else {
+                        start = new Point();
+                        start.copy(value.startPoint);
+                    }
+                    if (result.hasPoint(value.endPoint)) {
+                        end = result.points[value.endPoint.toString()];
+                    } else {
+                        end = new Point();
+                        end.copy(value.endPoint);
+                    }
+
+                    result.addEdge(start, end, value.unidirected);
                 }
             });
             
