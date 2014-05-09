@@ -1,5 +1,5 @@
 ﻿module Graph {
-    export class Point {
+    export class Vertex {
         public edges: Array<Edge> = new Array();
 
         constructor() {}
@@ -9,38 +9,38 @@
         }
 
         toString() {
-            return "Point: " + this.identify();
+            return "Vertex: " + this.identify();
         }
 
-        addEdge(point: Point, unidirected: boolean = false): Edge {
-            if (!this.hasEdge(point)) {
-                this.edges[point.identify()] = new Edge(this, point, unidirected);
+        addEdge(vertex: Vertex, unidirected: boolean = false): Edge {
+            if (!this.hasEdge(vertex)) {
+                this.edges[vertex.identify()] = new Edge(this, vertex, unidirected);
                 if (!unidirected) {
-                    point.addEdge(this, unidirected);
+                    vertex.addEdge(this, unidirected);
                 }
             }
-            return this.getEdge(point);
+            return this.getEdge(vertex);
         }
 
-        getEdge(point: Point): Edge {
-            if (this.hasEdge(point)) {
-                this.edges[point.identify()]
+        getEdge(vertex: Vertex): Edge {
+            if (this.hasEdge(vertex)) {
+                this.edges[vertex.identify()]
             }
             return undefined;
         }
 
-        hasEdge(point: Point): boolean {
-            return (this.edges[point.identify()] != undefined);
+        hasEdge(vertex: Vertex): boolean {
+            return (this.edges[vertex.identify()] != undefined);
         }
 
-        removeEdge(point: Point, unidirected: boolean = false):Edge {
-            if (this.hasEdge(point)) {
-                var edge = this.getEdge(point);
+        removeEdge(vertex: Vertex, unidirected: boolean = false):Edge {
+            if (this.hasEdge(vertex)) {
+                var edge = this.getEdge(vertex);
                 var index = this.edges.indexOf(edge);
                 if (index !== -1) {
                     this.edges.splice(index, 1);
                     if (!unidirected && !edge.unidirected) {
-                        point.removeEdge(this);
+                        vertex.removeEdge(this);
                     }
                     return edge;
                 }
@@ -48,24 +48,24 @@
             return undefined;
         }
 
-        copy(value: Point) : Point {
+        copy(value: Vertex) : Vertex {
             return this;
         }
     }
 
     export class Edge {
-        public startPoint: Point = new Point();
-        public endPoint: Point = new Point();
+        public startVertex: Vertex = new Vertex();
+        public endVertex: Vertex = new Vertex();
         public unidirected: boolean = false;
 
-        constructor(startPoint, endPoint: Point, unidirected: boolean = false) {
-            this.startPoint = startPoint;
-            this.endPoint = endPoint;
+        constructor(startVertex, endVertex: Vertex, unidirected: boolean = false) {
+            this.startVertex = startVertex;
+            this.endVertex = endVertex;
             this.unidirected = unidirected;
         }
 
         identify(): string {
-            return "[" + this.startPoint.identify() + ', '+ this.endPoint.identify() + "]";
+            return "[" + this.startVertex.identify() + ', '+ this.endVertex.identify() + "]";
         }
 
         toString() {
@@ -73,8 +73,8 @@
         }
 
         copy(value: Edge): Edge {
-            this.startPoint.copy(value.startPoint);
-            this.endPoint.copy(value.endPoint);
+            this.startVertex.copy(value.startVertex);
+            this.endVertex.copy(value.endVertex);
             this.unidirected = value.unidirected;
 
             return this;
@@ -83,35 +83,35 @@
 
     export class Graph {
         public static infinity = 18437736874454810627;
-        public points: Array<Point> = new Array();
+        public verticles: Array<Vertex> = new Array();
         public edges: Array<Edge> = new Array();
 
-        hasPoint(point: Point): boolean {
-            return (this.points[point.identify()] != undefined);
+        hasVertex(vertex: Vertex): boolean {
+            return (this.verticles[vertex.identify()] != undefined);
         }
 
-        addPoint(point: Point) {
-            if (!this.hasPoint(point)) {
-                this.points[point.identify()] = point;
+        addVertex(vertex: Vertex) {
+            if (!this.hasVertex(vertex)) {
+                this.verticles[vertex.identify()] = vertex;
             }
         }
 
-        removePoint(point: Point) {
-            if (this.hasPoint(point)) {
-                var index = this.points.indexOf(point);
+        removeVertex(vertex: Vertex) {
+            if (this.hasVertex(vertex)) {
+                var index = this.verticles.indexOf(vertex);
                 if (index !== -1) {
-                    this.points.slice(index, 1);
+                    this.verticles.slice(index, 1);
                     var _this = this;
-                    point.edges.forEach(function (edge) {
-                        _this.removeEdge(point, edge.endPoint, edge.unidirected);
+                    vertex.edges.forEach(function (edge) {
+                        _this.removeEdge(vertex, edge.endVertex, edge.unidirected);
                     });
                 }
             }
         }
 
-        hasEdge(startPoint, endPoint: Point): boolean {
-            if (this.hasPoint(startPoint)) {
-                return startPoint.hasEdge(endPoint);
+        hasEdge(startVertex, endVertex: Vertex): boolean {
+            if (this.hasVertex(startVertex)) {
+                return startVertex.hasEdge(endVertex);
             }
             return false;
         }
@@ -120,14 +120,14 @@
             return (this.edges[edge.identify()] !== undefined);
         }
 
-        addEdge(startPoint, endPoint: Point, unidirected: boolean = false) {
-            this.addPoint(startPoint);
-            this.addPoint(endPoint);
-            var edge = startPoint.addEdge(endPoint, unidirected);
+        addEdge(startVertex, endVertex: Vertex, unidirected: boolean = false) {
+            this.addVertex(startVertex);
+            this.addVertex(endVertex);
+            var edge = startVertex.addEdge(endVertex, unidirected);
             if (edge !== undefined && !this.inEdges(edge)) {
                 this.edges[edge.identify()] = edge;
                 if (!unidirected) {
-                    edge = endPoint.getEdge(startPoint);
+                    edge = endVertex.getEdge(startVertex);
                     if (edge !== undefined && !this.inEdges(edge)) {
                         this.edges[edge.identify()] = edge;
                     }
@@ -135,8 +135,8 @@
             }
         }
 
-        removeEdge(startPoint, endPoint: Point, unidirected: boolean = false) {
-            var edge = startPoint.removeEdge(endPoint, true);
+        removeEdge(startVertext, endVertext: Vertex, unidirected: boolean = false) {
+            var edge = startVertext.removeEdge(endVertext, true);
             if (this.inEdges(edge)) {
                 var index = this.edges.indexOf(edge);
                 if (index !== -1) {
@@ -144,7 +144,7 @@
                 }
             }
             if (!unidirected) {
-                edge = endPoint.removeEdge(startPoint, true);
+                edge = endVertext.removeEdge(startVertext, true);
                 if (this.inEdges(edge)) {
                     var index = this.edges.indexOf(edge);
                     if (index !== -1) {
@@ -154,41 +154,41 @@
             }
         }
 
-        //shoortest path from point
-        dijsktra(point: Point, weightFunction:(edge: Edge) => number): { weight: Array<number>; previous: Array<Point> } {
+        //shoortest path from vertex
+        dijsktra(vertex: Vertex, weightFunction:(edge: Edge) => number): { weight: Array<number>; previous: Array<Vertex> } {
             var result = { weight: new Array(), previous: new Array() };
-            var pointQueue = new Array();
+            var verticlesQueue = new Array();
             //init result
-            this.points.forEach(function (value: Point, index: number) {
+            this.verticles.forEach(function (value: Vertex, index: number) {
                 result.weight[value.identify()] = Graph.infinity;
                 result.previous[value.identify()] = undefined;
-                pointQueue[index] = value;
+                verticlesQueue[index] = value;
             });
             
-            result.weight[point.identify()] = 0;
-            //sort pointQueue according result.weight
-            pointQueue.sort(function(p1, p2) {
+            result.weight[vertex.identify()] = 0;
+            //sort verticlesQueue according result.weight
+            verticlesQueue.sort(function(p1, p2) {
                 return (result.weight[p1.identify()] - result.weight[p2.identify()]);
             });
             
-            while(pointQueue.length > 0) {
-                var u = pointQueue.slice(0, 1)[0]; //get first point(with lowest weight)
+            while(verticlesQueue.length > 0) {
+                var u = verticlesQueue.slice(0, 1)[0]; //get first vertex(with lowest weight)
                 if (result.weight[u.identify()] == Graph.infinity) {
                     break;
                 }
                 
-                //for each edges from point
+                //for each edges from vertex
                 u.edges.forEach(function (value: Edge, index: number) {
-                    //if endpoint was not removed from pointQueue
-                    var index = pointQueue.indexOf(value.endPoint);
+                    //if endvertex was not removed from verticlesQueue
+                    var index = verticlesQueue.indexOf(value.endVertex);
                     if (index !== -1) {
                         //compare weights
                         var alt = result.weight[u.identify()] + weightFunction(value);
                         if (alt < result.weight[u.identify()]) {
-                            result.weight[value.endPoint.identify()] = alt;
-                            result.previous[value.endPoint.identify()] = u;
-                            //sort reduced pointQueue according result.weight
-                            pointQueue.sort(function(p1, p2) {
+                            result.weight[value.endVertex.identify()] = alt;
+                            result.previous[value.endVertex.identify()] = u;
+                            //sort reduced verticesQueue according result.weight
+                            verticlesQueue.sort(function(p1, p2) {
                                 return (result.weight[p1.identify()] - result.weight[p2.identify()]);
                             });
                         }
@@ -199,25 +199,26 @@
             return result;
         }
 
-        //shortest path for all points
-        floydWarsshall(weightFunction:(edge: Edge) => number): { weight: Array<Array<number>>; next: Array<Array<Point>> } {
+        //shortest path for all verticles
+        floydWarsshall(weightFunction:(edge: Edge) => number): { weight: Array<Array<number>>; next: Array<Array<Vertex>> } {
             var result = { weight: new Array(), next: new Array() };
             //init result
-            this.points.forEach(function (value: Point, index: number) {
-                this.points.forEach(function (value2: Point, index2: number) {
+            var verticles = this.verticles;
+            verticles.forEach(function (value: Vertex, index: number) {
+                verticles.forEach(function (value2: Vertex, index2: number) {
                     result.weight[value.identify()][value2.identify()] = Graph.infinity;
                     result.next[value.identify()][value2.identify()] = undefined;
                 });
             });
             // the weight of the edge (u,v)
             this.edges.forEach(function (value: Edge, index: number) {
-                result.weight[value.startPoint.identify()][value.endPoint.identify()] = weightFunction(value);
+                result.weight[value.startVertex.identify()][value.endVertex.identify()] = weightFunction(value);
             });
-            
+
             // standard Floyd-Warshall implementation
-            this.points.forEach(function (value: Point, index: number) {
-                this.points.forEach(function (value2: Point, index2: number) {
-                    this.points.forEach(function (value3: Point, index3: number) {
+            verticles.forEach(function (value: Vertex, index: number) {
+                verticles.forEach(function (value2: Vertex, index2: number) {
+                    verticles.forEach(function (value3: Vertex, index3: number) {
                         var alt = (result.weight[value2.identify()][value.identify()] + result.weight[value.identify()][value3.identify()]);
                         if (alt < result.weight[value2.identify()][value3.identify()]) {
                             result.weight[value2.identify()][value3.identify()] = alt;
@@ -226,7 +227,7 @@
                 });
             });
             
-            this.points.forEach(function (value: Point, index: number) {
+            this.verticles.forEach(function (value: Vertex, index: number) {
                 result.next[value.identify()][value.identify()] = 0;
                 result = this.floydWarsshallShortestPaths(value, value, weightFunction, result);
             });
@@ -234,21 +235,21 @@
             return result;
         }
         
-        floydWarsshallShortestPaths(start: Point, end: Point, weightFunction:(edge: Edge) => number, data: { weight: Array<Array<number>>; next: Array<Array<Point>> }): { weight: Array<Array<number>>; next: Array<Array<Point>> } {
+        floydWarsshallShortestPaths(start: Vertex, end: Vertex, weightFunction:(edge: Edge) => number, data: { weight: Array<Array<number>>; next: Array<Array<Vertex>> }): { weight: Array<Array<number>>; next: Array<Array<Vertex>> } {
             start.edges.forEach(function(value: Edge, index: number){
                 var alt = weightFunction(value) + data.weight[start.identify()][end.identify()];
-                if ((data.weight[value.endPoint.identify()][end.identify()] == alt && 
-                    data.next[start.identify()][value.endPoint.identify()] == undefined
+                if ((data.weight[value.endVertex.identify()][end.identify()] == alt && 
+                    data.next[start.identify()][value.endVertex.identify()] == undefined
                 )) {
-                    data.next[value.endPoint.identify()][end.identify()] = start;
-                    data = this.floydWarsshallShortestPaths(value.endPoint, end, weightFunction, data);
+                    data.next[value.endVertex.identify()][end.identify()] = start;
+                    data = this.floydWarsshallShortestPaths(value.endVertex, end, weightFunction, data);
                 }
             });
             
             return data;
         }
         
-        floydWarsshallShortestPath(start: Point, end: Point, data: { weight: Array<Array<number>>; next: Array<Array<Point>> }): Array<Point> {
+        floydWarsshallShortestPath(start: Vertex, end: Vertex, data: { weight: Array<Array<number>>; next: Array<Array<Vertex>> }): Array<Vertex> {
             var result = new Array();
             if (data.next[start.identify()][end.identify()] == undefined) {
                 return result;
@@ -273,21 +274,21 @@
             });
             var result = new Graph();
             edges.forEach(function(value: Edge, index: number){
-                if (!(result.hasPoint(value.startPoint) && result.hasPoint(value.endPoint))) {
+                if (!(result.hasVertex(value.startVertex) && result.hasVertex(value.endVertex))) {
                     var start = undefined;
                     var end = undefined;
 
-                    if (result.hasPoint(value.startPoint)) {
-                        start = result.points[value.startPoint.identify()];
+                    if (result.hasVertex(value.startVertex)) {
+                        start = result.verticles[value.startVertex.identify()];
                     } else {
-                        start = new Point();
-                        start.copy(value.startPoint);
+                        start = new Vertex();
+                        start.copy(value.startVertex);
                     }
-                    if (result.hasPoint(value.endPoint)) {
-                        end = result.points[value.endPoint.identify()];
+                    if (result.hasVertex(value.endVertex)) {
+                        end = result.verticles[value.endVertex.identify()];
                     } else {
-                        end = new Point();
-                        end.copy(value.endPoint);
+                        end = new Vertex();
+                        end.copy(value.endVertex);
                     }
 
                     result.addEdge(start, end, value.unidirected);

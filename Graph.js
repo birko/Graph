@@ -1,48 +1,48 @@
 ﻿var Graph;
 (function (_Graph) {
-    var Point = (function () {
-        function Point() {
+    var Vertex = (function () {
+        function Vertex() {
             this.edges = new Array();
         }
-        Point.prototype.identify = function () {
+        Vertex.prototype.identify = function () {
             throw new Error('This method is abstract');
         };
 
-        Point.prototype.toString = function () {
-            return "Point: " + this.identify();
+        Vertex.prototype.toString = function () {
+            return "Vertex: " + this.identify();
         };
 
-        Point.prototype.addEdge = function (point, unidirected) {
+        Vertex.prototype.addEdge = function (vertex, unidirected) {
             if (typeof unidirected === "undefined") { unidirected = false; }
-            if (!this.hasEdge(point)) {
-                this.edges[point.identify()] = new Edge(this, point, unidirected);
+            if (!this.hasEdge(vertex)) {
+                this.edges[vertex.identify()] = new Edge(this, vertex, unidirected);
                 if (!unidirected) {
-                    point.addEdge(this, unidirected);
+                    vertex.addEdge(this, unidirected);
                 }
             }
-            return this.getEdge(point);
+            return this.getEdge(vertex);
         };
 
-        Point.prototype.getEdge = function (point) {
-            if (this.hasEdge(point)) {
-                this.edges[point.identify()];
+        Vertex.prototype.getEdge = function (vertex) {
+            if (this.hasEdge(vertex)) {
+                this.edges[vertex.identify()];
             }
             return undefined;
         };
 
-        Point.prototype.hasEdge = function (point) {
-            return (this.edges[point.identify()] != undefined);
+        Vertex.prototype.hasEdge = function (vertex) {
+            return (this.edges[vertex.identify()] != undefined);
         };
 
-        Point.prototype.removeEdge = function (point, unidirected) {
+        Vertex.prototype.removeEdge = function (vertex, unidirected) {
             if (typeof unidirected === "undefined") { unidirected = false; }
-            if (this.hasEdge(point)) {
-                var edge = this.getEdge(point);
+            if (this.hasEdge(vertex)) {
+                var edge = this.getEdge(vertex);
                 var index = this.edges.indexOf(edge);
                 if (index !== -1) {
                     this.edges.splice(index, 1);
                     if (!unidirected && !edge.unidirected) {
-                        point.removeEdge(this);
+                        vertex.removeEdge(this);
                     }
                     return edge;
                 }
@@ -50,25 +50,25 @@
             return undefined;
         };
 
-        Point.prototype.copy = function (value) {
+        Vertex.prototype.copy = function (value) {
             return this;
         };
-        return Point;
+        return Vertex;
     })();
-    _Graph.Point = Point;
+    _Graph.Vertex = Vertex;
 
     var Edge = (function () {
-        function Edge(startPoint, endPoint, unidirected) {
+        function Edge(startVertex, endVertex, unidirected) {
             if (typeof unidirected === "undefined") { unidirected = false; }
-            this.startPoint = new Point();
-            this.endPoint = new Point();
+            this.startVertex = new Vertex();
+            this.endVertex = new Vertex();
             this.unidirected = false;
-            this.startPoint = startPoint;
-            this.endPoint = endPoint;
+            this.startVertex = startVertex;
+            this.endVertex = endVertex;
             this.unidirected = unidirected;
         }
         Edge.prototype.identify = function () {
-            return "[" + this.startPoint.identify() + ', ' + this.endPoint.identify() + "]";
+            return "[" + this.startVertex.identify() + ', ' + this.endVertex.identify() + "]";
         };
 
         Edge.prototype.toString = function () {
@@ -76,8 +76,8 @@
         };
 
         Edge.prototype.copy = function (value) {
-            this.startPoint.copy(value.startPoint);
-            this.endPoint.copy(value.endPoint);
+            this.startVertex.copy(value.startVertex);
+            this.endVertex.copy(value.endVertex);
             this.unidirected = value.unidirected;
 
             return this;
@@ -88,35 +88,35 @@
 
     var Graph = (function () {
         function Graph() {
-            this.points = new Array();
+            this.verticles = new Array();
             this.edges = new Array();
         }
-        Graph.prototype.hasPoint = function (point) {
-            return (this.points[point.identify()] != undefined);
+        Graph.prototype.hasVertex = function (vertex) {
+            return (this.verticles[vertex.identify()] != undefined);
         };
 
-        Graph.prototype.addPoint = function (point) {
-            if (!this.hasPoint(point)) {
-                this.points[point.identify()] = point;
+        Graph.prototype.addVertex = function (vertex) {
+            if (!this.hasVertex(vertex)) {
+                this.verticles[vertex.identify()] = vertex;
             }
         };
 
-        Graph.prototype.removePoint = function (point) {
-            if (this.hasPoint(point)) {
-                var index = this.points.indexOf(point);
+        Graph.prototype.removeVertex = function (vertex) {
+            if (this.hasVertex(vertex)) {
+                var index = this.verticles.indexOf(vertex);
                 if (index !== -1) {
-                    this.points.slice(index, 1);
+                    this.verticles.slice(index, 1);
                     var _this = this;
-                    point.edges.forEach(function (edge) {
-                        _this.removeEdge(point, edge.endPoint, edge.unidirected);
+                    vertex.edges.forEach(function (edge) {
+                        _this.removeEdge(vertex, edge.endVertex, edge.unidirected);
                     });
                 }
             }
         };
 
-        Graph.prototype.hasEdge = function (startPoint, endPoint) {
-            if (this.hasPoint(startPoint)) {
-                return startPoint.hasEdge(endPoint);
+        Graph.prototype.hasEdge = function (startVertex, endVertex) {
+            if (this.hasVertex(startVertex)) {
+                return startVertex.hasEdge(endVertex);
             }
             return false;
         };
@@ -125,15 +125,15 @@
             return (this.edges[edge.identify()] !== undefined);
         };
 
-        Graph.prototype.addEdge = function (startPoint, endPoint, unidirected) {
+        Graph.prototype.addEdge = function (startVertex, endVertex, unidirected) {
             if (typeof unidirected === "undefined") { unidirected = false; }
-            this.addPoint(startPoint);
-            this.addPoint(endPoint);
-            var edge = startPoint.addEdge(endPoint, unidirected);
+            this.addVertex(startVertex);
+            this.addVertex(endVertex);
+            var edge = startVertex.addEdge(endVertex, unidirected);
             if (edge !== undefined && !this.inEdges(edge)) {
                 this.edges[edge.identify()] = edge;
                 if (!unidirected) {
-                    edge = endPoint.getEdge(startPoint);
+                    edge = endVertex.getEdge(startVertex);
                     if (edge !== undefined && !this.inEdges(edge)) {
                         this.edges[edge.identify()] = edge;
                     }
@@ -141,9 +141,9 @@
             }
         };
 
-        Graph.prototype.removeEdge = function (startPoint, endPoint, unidirected) {
+        Graph.prototype.removeEdge = function (startVertext, endVertext, unidirected) {
             if (typeof unidirected === "undefined") { unidirected = false; }
-            var edge = startPoint.removeEdge(endPoint, true);
+            var edge = startVertext.removeEdge(endVertext, true);
             if (this.inEdges(edge)) {
                 var index = this.edges.indexOf(edge);
                 if (index !== -1) {
@@ -151,7 +151,7 @@
                 }
             }
             if (!unidirected) {
-                edge = endPoint.removeEdge(startPoint, true);
+                edge = endVertext.removeEdge(startVertext, true);
                 if (this.inEdges(edge)) {
                     var index = this.edges.indexOf(edge);
                     if (index !== -1) {
@@ -161,44 +161,44 @@
             }
         };
 
-        //shoortest path from point
-        Graph.prototype.dijsktra = function (point, weightFunction) {
+        //shoortest path from vertex
+        Graph.prototype.dijsktra = function (vertex, weightFunction) {
             var result = { weight: new Array(), previous: new Array() };
-            var pointQueue = new Array();
+            var verticlesQueue = new Array();
 
             //init result
-            this.points.forEach(function (value, index) {
+            this.verticles.forEach(function (value, index) {
                 result.weight[value.identify()] = Graph.infinity;
                 result.previous[value.identify()] = undefined;
-                pointQueue[index] = value;
+                verticlesQueue[index] = value;
             });
 
-            result.weight[point.identify()] = 0;
+            result.weight[vertex.identify()] = 0;
 
-            //sort pointQueue according result.weight
-            pointQueue.sort(function (p1, p2) {
+            //sort verticlesQueue according result.weight
+            verticlesQueue.sort(function (p1, p2) {
                 return (result.weight[p1.identify()] - result.weight[p2.identify()]);
             });
 
-            while (pointQueue.length > 0) {
-                var u = pointQueue.slice(0, 1)[0];
+            while (verticlesQueue.length > 0) {
+                var u = verticlesQueue.slice(0, 1)[0];
                 if (result.weight[u.identify()] == Graph.infinity) {
                     break;
                 }
 
-                //for each edges from point
+                //for each edges from vertex
                 u.edges.forEach(function (value, index) {
-                    //if endpoint was not removed from pointQueue
-                    var index = pointQueue.indexOf(value.endPoint);
+                    //if endvertex was not removed from verticlesQueue
+                    var index = verticlesQueue.indexOf(value.endVertex);
                     if (index !== -1) {
                         //compare weights
                         var alt = result.weight[u.identify()] + weightFunction(value);
                         if (alt < result.weight[u.identify()]) {
-                            result.weight[value.endPoint.identify()] = alt;
-                            result.previous[value.endPoint.identify()] = u;
+                            result.weight[value.endVertex.identify()] = alt;
+                            result.previous[value.endVertex.identify()] = u;
 
-                            //sort reduced pointQueue according result.weight
-                            pointQueue.sort(function (p1, p2) {
+                            //sort reduced verticesQueue according result.weight
+                            verticlesQueue.sort(function (p1, p2) {
                                 return (result.weight[p1.identify()] - result.weight[p2.identify()]);
                             });
                         }
@@ -209,13 +209,14 @@
             return result;
         };
 
-        //shortest path for all points
+        //shortest path for all verticles
         Graph.prototype.floydWarsshall = function (weightFunction) {
             var result = { weight: new Array(), next: new Array() };
 
             //init result
-            this.points.forEach(function (value, index) {
-                this.points.forEach(function (value2, index2) {
+            var verticles = this.verticles;
+            verticles.forEach(function (value, index) {
+                verticles.forEach(function (value2, index2) {
                     result.weight[value.identify()][value2.identify()] = Graph.infinity;
                     result.next[value.identify()][value2.identify()] = undefined;
                 });
@@ -223,13 +224,13 @@
 
             // the weight of the edge (u,v)
             this.edges.forEach(function (value, index) {
-                result.weight[value.startPoint.identify()][value.endPoint.identify()] = weightFunction(value);
+                result.weight[value.startVertex.identify()][value.endVertex.identify()] = weightFunction(value);
             });
 
             // standard Floyd-Warshall implementation
-            this.points.forEach(function (value, index) {
-                this.points.forEach(function (value2, index2) {
-                    this.points.forEach(function (value3, index3) {
+            verticles.forEach(function (value, index) {
+                verticles.forEach(function (value2, index2) {
+                    verticles.forEach(function (value3, index3) {
                         var alt = (result.weight[value2.identify()][value.identify()] + result.weight[value.identify()][value3.identify()]);
                         if (alt < result.weight[value2.identify()][value3.identify()]) {
                             result.weight[value2.identify()][value3.identify()] = alt;
@@ -238,7 +239,7 @@
                 });
             });
 
-            this.points.forEach(function (value, index) {
+            this.verticles.forEach(function (value, index) {
                 result.next[value.identify()][value.identify()] = 0;
                 result = this.floydWarsshallShortestPaths(value, value, weightFunction, result);
             });
@@ -249,9 +250,9 @@
         Graph.prototype.floydWarsshallShortestPaths = function (start, end, weightFunction, data) {
             start.edges.forEach(function (value, index) {
                 var alt = weightFunction(value) + data.weight[start.identify()][end.identify()];
-                if ((data.weight[value.endPoint.identify()][end.identify()] == alt && data.next[start.identify()][value.endPoint.identify()] == undefined)) {
-                    data.next[value.endPoint.identify()][end.identify()] = start;
-                    data = this.floydWarsshallShortestPaths(value.endPoint, end, weightFunction, data);
+                if ((data.weight[value.endVertex.identify()][end.identify()] == alt && data.next[start.identify()][value.endVertex.identify()] == undefined)) {
+                    data.next[value.endVertex.identify()][end.identify()] = start;
+                    data = this.floydWarsshallShortestPaths(value.endVertex, end, weightFunction, data);
                 }
             });
 
@@ -283,21 +284,21 @@
             });
             var result = new Graph();
             edges.forEach(function (value, index) {
-                if (!(result.hasPoint(value.startPoint) && result.hasPoint(value.endPoint))) {
+                if (!(result.hasVertex(value.startVertex) && result.hasVertex(value.endVertex))) {
                     var start = undefined;
                     var end = undefined;
 
-                    if (result.hasPoint(value.startPoint)) {
-                        start = result.points[value.startPoint.identify()];
+                    if (result.hasVertex(value.startVertex)) {
+                        start = result.verticles[value.startVertex.identify()];
                     } else {
-                        start = new Point();
-                        start.copy(value.startPoint);
+                        start = new Vertex();
+                        start.copy(value.startVertex);
                     }
-                    if (result.hasPoint(value.endPoint)) {
-                        end = result.points[value.endPoint.identify()];
+                    if (result.hasVertex(value.endVertex)) {
+                        end = result.verticles[value.endVertex.identify()];
                     } else {
-                        end = new Point();
-                        end.copy(value.endPoint);
+                        end = new Vertex();
+                        end.copy(value.endVertex);
                     }
 
                     result.addEdge(start, end, value.unidirected);
