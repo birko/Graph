@@ -1,11 +1,13 @@
 ﻿var Graph;
 (function (_Graph) {
+    "use strict";
     var Vertex = (function () {
         function Vertex() {
             this.edges = new Array();
+            this.edges = new Array();
         }
         Vertex.prototype.identify = function () {
-            throw new Error('This method is abstract');
+            throw new Error("This method is abstract");
         };
 
         Vertex.prototype.toString = function () {
@@ -31,7 +33,7 @@
         };
 
         Vertex.prototype.hasEdge = function (vertex) {
-            return (this.edges[vertex.identify()] != undefined);
+            return (this.edges[vertex.identify()] !== undefined);
         };
 
         Vertex.prototype.removeEdge = function (vertex, unidirected) {
@@ -68,7 +70,7 @@
             this.unidirected = unidirected;
         }
         Edge.prototype.identify = function () {
-            return "[" + this.startVertex.identify() + ', ' + this.endVertex.identify() + "]";
+            return "[" + this.startVertex.identify() + ", " + this.endVertex.identify() + "]";
         };
 
         Edge.prototype.toString = function () {
@@ -92,7 +94,7 @@
             this.edges = new Array();
         }
         Graph.prototype.hasVertex = function (vertex) {
-            return (this.verticles[vertex.identify()] != undefined);
+            return (this.verticles[vertex.identify()] !== undefined);
         };
 
         Graph.prototype.addVertex = function (vertex) {
@@ -106,10 +108,9 @@
                 var index = this.verticles.indexOf(vertex);
                 if (index !== -1) {
                     this.verticles.slice(index, 1);
-                    var _this = this;
                     vertex.edges.forEach(function (edge) {
-                        _this.removeEdge(vertex, edge.endVertex, edge.unidirected);
-                    });
+                        this.removeEdge(vertex, edge.endVertex, edge.unidirected);
+                    }.bind(this));
                 }
             }
         };
@@ -144,8 +145,9 @@
         Graph.prototype.removeEdge = function (startVertext, endVertext, unidirected) {
             if (typeof unidirected === "undefined") { unidirected = false; }
             var edge = startVertext.removeEdge(endVertext, true);
+            var index = -1;
             if (this.inEdges(edge)) {
-                var index = this.edges.indexOf(edge);
+                index = this.edges.indexOf(edge);
                 if (index !== -1) {
                     this.edges.splice(index, 1);
                 }
@@ -153,7 +155,7 @@
             if (!unidirected) {
                 edge = endVertext.removeEdge(startVertext, true);
                 if (this.inEdges(edge)) {
-                    var index = this.edges.indexOf(edge);
+                    index = this.edges.indexOf(edge);
                     if (index !== -1) {
                         this.edges.splice(index, 1);
                     }
@@ -161,12 +163,12 @@
             }
         };
 
-        //shoortest path from vertex
+        // shoortest path from vertex
         Graph.prototype.dijsktra = function (vertex, weightFunction) {
             var result = { weight: new Array(), previous: new Array() };
             var verticlesQueue = new Array();
 
-            //init result
+            // init result
             this.verticles.forEach(function (value, index) {
                 result.weight[value.identify()] = Graph.infinity;
                 result.previous[value.identify()] = undefined;
@@ -175,29 +177,29 @@
 
             result.weight[vertex.identify()] = 0;
 
-            //sort verticlesQueue according result.weight
+            // sort verticlesQueue according result.weight
             verticlesQueue.sort(function (p1, p2) {
                 return (result.weight[p1.identify()] - result.weight[p2.identify()]);
             });
 
             while (verticlesQueue.length > 0) {
                 var u = verticlesQueue.slice(0, 1)[0];
-                if (result.weight[u.identify()] == Graph.infinity) {
+                if (result.weight[u.identify()] === Graph.infinity) {
                     break;
                 }
 
-                //for each edges from vertex
+                // for each edges from vertex
                 u.edges.forEach(function (value, index) {
-                    //if endvertex was not removed from verticlesQueue
-                    var index = verticlesQueue.indexOf(value.endVertex);
-                    if (index !== -1) {
-                        //compare weights
+                    // if endvertex was not removed from verticlesQueue
+                    var index2 = verticlesQueue.indexOf(value.endVertex);
+                    if (index2 !== -1) {
+                        // compare weights
                         var alt = result.weight[u.identify()] + weightFunction(value);
                         if (alt < result.weight[u.identify()]) {
                             result.weight[value.endVertex.identify()] = alt;
                             result.previous[value.endVertex.identify()] = u;
 
-                            //sort reduced verticesQueue according result.weight
+                            // sort reduced verticesQueue according result.weight
                             verticlesQueue.sort(function (p1, p2) {
                                 return (result.weight[p1.identify()] - result.weight[p2.identify()]);
                             });
@@ -209,11 +211,11 @@
             return result;
         };
 
-        //shortest path for all verticles
+        // shortest path for all verticles
         Graph.prototype.floydWarsshall = function (weightFunction) {
             var result = { weight: new Array(), next: new Array() };
 
-            //init result
+            // init result
             var verticles = this.verticles;
             verticles.forEach(function (value, index) {
                 verticles.forEach(function (value2, index2) {
@@ -250,7 +252,7 @@
         Graph.prototype.floydWarsshallShortestPaths = function (start, end, weightFunction, data) {
             start.edges.forEach(function (value, index) {
                 var alt = weightFunction(value) + data.weight[start.identify()][end.identify()];
-                if ((data.weight[value.endVertex.identify()][end.identify()] == alt && data.next[start.identify()][value.endVertex.identify()] == undefined)) {
+                if ((data.weight[value.endVertex.identify()][end.identify()] === alt && data.next[start.identify()][value.endVertex.identify()] === undefined)) {
                     data.next[value.endVertex.identify()][end.identify()] = start;
                     data = this.floydWarsshallShortestPaths(value.endVertex, end, weightFunction, data);
                 }
@@ -261,11 +263,11 @@
 
         Graph.prototype.floydWarsshallShortestPath = function (start, end, data) {
             var result = new Array();
-            if (data.next[start.identify()][end.identify()] == undefined) {
+            if (data.next[start.identify()][end.identify()] === undefined) {
                 return result;
             }
             result[0] = start;
-            while (start != end) {
+            while (start !== end) {
                 start = data.next[start.identify()][end.identify()];
                 result.push(start);
             }
@@ -273,7 +275,7 @@
             return result;
         };
 
-        //minimum spanning tree
+        // minimum spanning tree
         Graph.prototype.kruskal = function (weightFunction) {
             var edges = new Array();
             this.edges.forEach(function (value, index) {
