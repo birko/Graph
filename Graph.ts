@@ -86,24 +86,24 @@
 
     export class Graph {
         public static infinity:number = 18437736874454810627;
-        public verticles: Array<Vertex> = new Array();
+        public vertices: Array<Vertex> = new Array();
         public edges: Array<Edge> = new Array();
 
         hasVertex(vertex: Vertex): boolean {
-            return (this.verticles[vertex.identify()] !== undefined);
+            return (this.vertices[vertex.identify()] !== undefined);
         }
 
         addVertex(vertex: Vertex): void {
             if (!this.hasVertex(vertex)) {
-                this.verticles[vertex.identify()] = vertex;
+                this.vertices[vertex.identify()] = vertex;
             }
         }
 
         removeVertex(vertex: Vertex): void {
             if (this.hasVertex(vertex)) {
-                var index:number = this.verticles.indexOf(vertex);
+                var index:number = this.vertices.indexOf(vertex);
                 if (index !== -1) {
-                    this.verticles.slice(index, 1);
+                    this.vertices.slice(index, 1);
                     vertex.edges.forEach(function (edge: Edge):void {
                         this.removeEdge(vertex, edge.endVertex, edge.unidirected);
                     }.bind(this));
@@ -160,30 +160,30 @@
         // shoortest path from vertex
         dijsktra(vertex: Vertex, weightFunction:(edge: Edge) => number): { weight: Array<number>; previous: Array<Vertex> } {
             var result: { weight: Array<number>; previous: Array<Vertex> }  = { weight: new Array(), previous: new Array() };
-            var verticlesQueue: Array<Vertex> = new Array();
+            var verticesQueue: Array<Vertex> = new Array();
             // init result
-            this.verticles.forEach(function (value: Vertex, index: number): void {
+            this.vertices.forEach(function (value: Vertex, index: number): void {
                 result.weight[value.identify()] = Graph.infinity;
                 result.previous[value.identify()] = undefined;
-                verticlesQueue[index] = value;
+                verticesQueue[index] = value;
             });
             
             result.weight[vertex.identify()] = 0;
-            // sort verticlesQueue according result.weight
-            verticlesQueue.sort(function(p1:Vertex, p2:Vertex): number {
+            // sort verticesQueue according result.weight
+            verticesQueue.sort(function(p1:Vertex, p2:Vertex): number {
                 return (result.weight[p1.identify()] - result.weight[p2.identify()]);
             });
             
-            while(verticlesQueue.length > 0) {
-                var u:Vertex = verticlesQueue.slice(0, 1)[0]; // get first vertex(with lowest weight)
+            while(verticesQueue.length > 0) {
+                var u:Vertex = verticesQueue.slice(0, 1)[0]; // get first vertex(with lowest weight)
                 if (result.weight[u.identify()] === Graph.infinity) {
                     break;
                 }
                 
                 // for each edges from vertex
                 u.edges.forEach(function (value: Edge, index: number): void {
-                    // if endvertex was not removed from verticlesQueue
-                    var index2:number = verticlesQueue.indexOf(value.endVertex);
+                    // if endvertex was not removed from verticesQueue
+                    var index2:number = verticesQueue.indexOf(value.endVertex);
                     if (index2 !== -1) {
                         // compare weights
                         var alt:number = result.weight[u.identify()] + weightFunction(value);
@@ -191,7 +191,7 @@
                             result.weight[value.endVertex.identify()] = alt;
                             result.previous[value.endVertex.identify()] = u;
                             // sort reduced verticesQueue according result.weight
-                            verticlesQueue.sort(function(p1:Vertex, p2:Vertex): number {
+                            verticesQueue.sort(function(p1:Vertex, p2:Vertex): number {
                                 return (result.weight[p1.identify()] - result.weight[p2.identify()]);
                             });
                         }
@@ -202,13 +202,13 @@
             return result;
         }
 
-        // shortest path for all verticles
+        // shortest path for all vertices
         floydWarsshall(weightFunction:(edge: Edge) => number): { weight: Array<Array<number>>; next: Array<Array<Vertex>> } {
             var result: { weight: Array<Array<number>>; next: Array<Array<Vertex>> } = { weight: new Array(), next: new Array() };
             // init result
-            var verticles: Array<Vertex> = this.verticles;
-            verticles.forEach(function (value: Vertex, index: number): void {
-                verticles.forEach(function (value2: Vertex, index2: number): void {
+            var vertices: Array<Vertex> = this.vertices;
+            vertices.forEach(function (value: Vertex, index: number): void {
+                vertices.forEach(function (value2: Vertex, index2: number): void {
                     result.weight[value.identify()][value2.identify()] = Graph.infinity;
                     result.next[value.identify()][value2.identify()] = undefined;
                 });
@@ -219,9 +219,9 @@
             });
 
             // standard Floyd-Warshall implementation
-            verticles.forEach(function (value: Vertex, index: number): void {
-                verticles.forEach(function (value2: Vertex, index2: number): void {
-                    verticles.forEach(function (value3: Vertex, index3: number): void {
+            vertices.forEach(function (value: Vertex, index: number): void {
+                vertices.forEach(function (value2: Vertex, index2: number): void {
+                    vertices.forEach(function (value3: Vertex, index3: number): void {
                         var alt: number = (result.weight[value2.identify()][value.identify()]
                             + result.weight[value.identify()][value3.identify()]);
                         if (alt < result.weight[value2.identify()][value3.identify()]) {
@@ -231,7 +231,7 @@
                 });
             });
             
-            this.verticles.forEach(function (value: Vertex, index: number): void {
+            this.vertices.forEach(function (value: Vertex, index: number): void {
                 result.next[value.identify()][value.identify()] = 0;
                 result = this.floydWarsshallShortestPaths(value, value, weightFunction, result);
             });
@@ -287,13 +287,13 @@
                     var end:Vertex = undefined;
 
                     if (result.hasVertex(value.startVertex)) {
-                        start = result.verticles[value.startVertex.identify()];
+                        start = result.vertices[value.startVertex.identify()];
                     } else {
                         start = new Vertex();
                         start.copy(value.startVertex);
                     }
                     if (result.hasVertex(value.endVertex)) {
-                        end = result.verticles[value.endVertex.identify()];
+                        end = result.vertices[value.endVertex.identify()];
                     } else {
                         end = new Vertex();
                         end.copy(value.endVertex);
