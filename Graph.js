@@ -1,77 +1,10 @@
 ﻿var Graph;
 (function (_Graph) {
     "use strict";
-    var Vertex = (function () {
-        function Vertex() {
-            this.edges = new Array();
-            this.edges = new Array();
-        }
-        Vertex.prototype.identify = function () {
-            throw new Error("This method is abstract");
-        };
-
-        Vertex.prototype.toString = function () {
-            return "Vertex: " + this.identify();
-        };
-
-        Vertex.prototype.addEdge = function (edge) {
-            if (!this.hasEdge(edge.endVertex)) {
-                edge.startVertex = this;
-                this.edges[edge.endVertex.identify()] = edge;
-                if (!edge.unidirected) {
-                    var cloneedge = edge.clone();
-                    cloneedge.endVertex = this;
-                    edge.endVertex.addEdge(cloneedge);
-                }
-            }
-        };
-
-        Vertex.prototype.createEdge = function (vertex, unidirected) {
-            if (typeof unidirected === "undefined") { unidirected = false; }
-            var edge = new Edge(this, vertex, unidirected);
-            this.addEdge(edge);
-            return this.getEdge(vertex);
-        };
-
-        Vertex.prototype.getEdge = function (vertex) {
-            if (this.hasEdge(vertex)) {
-                this.edges[vertex.identify()];
-            }
-            return undefined;
-        };
-
-        Vertex.prototype.hasEdge = function (vertex) {
-            return (this.edges[vertex.identify()] !== undefined);
-        };
-
-        Vertex.prototype.removeEdge = function (vertex, unidirected) {
-            if (typeof unidirected === "undefined") { unidirected = false; }
-            if (this.hasEdge(vertex)) {
-                var edge = this.getEdge(vertex);
-                var index = this.edges.indexOf(edge);
-                if (index !== -1) {
-                    this.edges.splice(index, 1);
-                    if (!unidirected && !edge.unidirected) {
-                        vertex.removeEdge(this);
-                    }
-                    return edge;
-                }
-            }
-            return undefined;
-        };
-
-        Vertex.prototype.copy = function (value) {
-            return this;
-        };
-        return Vertex;
-    })();
-    _Graph.Vertex = Vertex;
 
     var Edge = (function () {
         function Edge(startVertex, endVertex, unidirected) {
             if (typeof unidirected === "undefined") { unidirected = false; }
-            this.startVertex = new Vertex();
-            this.endVertex = new Vertex();
             this.unidirected = false;
             this.startVertex = startVertex;
             this.endVertex = endVertex;
@@ -83,14 +16,6 @@
 
         Edge.prototype.toString = function () {
             return "Edge: " + this.identify();
-        };
-
-        Edge.prototype.copy = function (value) {
-            this.startVertex.copy(value.startVertex);
-            this.endVertex.copy(value.endVertex);
-            this.unidirected = value.unidirected;
-
-            return this;
         };
 
         Edge.prototype.clone = function () {
@@ -115,68 +40,81 @@
             }
         };
 
+        Graph.prototype.getNeighbours = function (vertex) {
+            var result = new Array();
+            var edges = this.getEdges(vertex);
+            edges.forEach(function (value, index) {
+                var pushVertex = value.endVertex;
+                if (result.indexOf(pushVertex) === -1 && pushVertex.compare(vertex) !== 0) {
+                    result.push(pushVertex);
+                }
+            });
+            return result;
+        };
+
+        Graph.prototype.getEdges = function (vertex) {
+            return this.edges.filter(function (value, index) {
+                return (value.startVertex.compare(vertex) === 0);
+            });
+        };
+
         Graph.prototype.removeVertex = function (vertex) {
             if (this.hasVertex(vertex)) {
                 var index = this.vertices.indexOf(vertex);
                 if (index !== -1) {
+                    var edges = this.getEdges(vertex);
                     this.vertices.slice(index, 1);
-                    vertex.edges.forEach(function (edge) {
-                        this.removeEdge(vertex, edge.endVertex, edge.unidirected);
+                    edges.forEach(function (edge) {
+                        this.removeEdge(edge);
                     }.bind(this));
                 }
             }
         };
 
-        Graph.prototype.hasEdge = function (startVertex, endVertex) {
-            if (this.hasVertex(startVertex)) {
-                return startVertex.hasEdge(endVertex);
-            }
-            return false;
-        };
-
-        Graph.prototype.inEdges = function (edge) {
-            return (this.edges[edge.identify()] !== undefined);
-        };
-
-        Graph.prototype.addEdge = function (edge) {
-            if (edge !== undefined && !this.inEdges(edge)) {
-                this.addVertex(edge.startVertex);
-                this.addVertex(edge.endVertex);
-                this.edges[edge.identify()] = edge;
-                if (!edge.unidirected) {
-                    var edgeopisite = edge.endVertex.getEdge(edge.startVertex);
-                    this.edges[edgeopisite.identify()] = edgeopisite;
+        Graph.prototype.getEdge = function (startVertex, endVertex) {
+            var edges = this.getEdges(startVertex);
+            var edge;
+            edges.forEach(function (value) {
+                if ((edge === undefined) && (value.endVertex.compare(endVertex) === 0)) {
+                    edge = value;
                 }
-            }
-        };
-
-        Graph.prototype.createEdge = function (startVertex, endVertex, unidirected) {
-            if (typeof unidirected === "undefined") { unidirected = false; }
-            var edge = new Edge(startVertex, endVertex, unidirected);
-            this.addEdge(edge);
-            if (this.inEdges(edge)) {
-                return edge;
-            }
-
+            });
             return undefined;
         };
 
-        Graph.prototype.removeEdge = function (startVertext, endVertext, unidirected) {
-            if (typeof unidirected === "undefined") { unidirected = false; }
-            var edge = startVertext.removeEdge(endVertext, true);
-            var index = -1;
-            if (this.inEdges(edge)) {
-                index = this.edges.indexOf(edge);
-                if (index !== -1) {
-                    this.edges.splice(index, 1);
+        Graph.prototype.hasEdge = function (startVertex, endVertex) {
+            var edge = this.getEdge(startVertex, endVertex);
+            return (edge !== undefined);
+        };
+
+        Graph.prototype.addEdge = function (edge) {
+            if (edge !== undefined && !this.hasEdge(edge.startVertex, edge.endVertex)) {
+                this.addVertex(edge.startVertex);
+                this.addVertex(edge.endVertex);
+                this.edges.push(edge);
+                if (!edge.unidirected) {
+                    var cloneEdge = edge.clone();
+                    cloneEdge.startVertex = edge.endVertex;
+                    cloneEdge.endVertex = edge.startVertex;
+                    this.edges.push(cloneEdge);
                 }
             }
-            if (!unidirected) {
-                edge = endVertext.removeEdge(startVertext, true);
-                if (this.inEdges(edge)) {
-                    index = this.edges.indexOf(edge);
-                    if (index !== -1) {
-                        this.edges.splice(index, 1);
+        };
+
+        Graph.prototype.removeEdge = function (startVertext, endVertext) {
+            var edge = this.getEdge(startVertext, endVertext);
+            if (edge !== undefined) {
+                var index = this.edges.indexOf(edge);
+                if (index !== -1) {
+                    this.edges.slice(index, 1);
+                }
+                if (edge.unidirected) {
+                    edge = this.getEdge(endVertext, startVertext);
+                    if (edge !== undefined) {
+                        index = this.edges.indexOf(edge);
+                        if (index !== -1) {
+                            this.edges.slice(index, 1);
+                        }
                     }
                 }
             }
@@ -189,7 +127,7 @@
 
             // init result
             this.vertices.forEach(function (value, index) {
-                result.weight[value.identify()] = Graph.infinity;
+                result.weight[value.identify()] = Infinity;
                 result.previous[value.identify()] = undefined;
                 verticesQueue[index] = value;
             });
@@ -203,12 +141,12 @@
 
             while (verticesQueue.length > 0) {
                 var u = verticesQueue.slice(0, 1)[0];
-                if (result.weight[u.identify()] === Graph.infinity) {
+                if (result.weight[u.identify()] === Infinity) {
                     break;
                 }
 
                 // for each edges from vertex
-                u.edges.forEach(function (value, index) {
+                this.getEdges(u).forEach(function (value, index) {
                     // if endvertex was not removed from verticesQueue
                     var index2 = verticesQueue.indexOf(value.endVertex);
                     if (index2 !== -1) {
@@ -238,7 +176,7 @@
             var vertices = this.vertices;
             vertices.forEach(function (value, index) {
                 vertices.forEach(function (value2, index2) {
-                    result.weight[value.identify()][value2.identify()] = Graph.infinity;
+                    result.weight[value.identify()][value2.identify()] = Infinity;
                     result.next[value.identify()][value2.identify()] = undefined;
                 });
             });
@@ -269,7 +207,7 @@
         };
 
         Graph.prototype.floydWarsshallShortestPaths = function (start, end, weightFunction, data) {
-            start.edges.forEach(function (value, index) {
+            this.getEdges(start).forEach(function (value, index) {
                 var alt = weightFunction(value) + data.weight[start.identify()][end.identify()];
                 if ((data.weight[value.endVertex.identify()][end.identify()] === alt && data.next[start.identify()][value.endVertex.identify()] === undefined)) {
                     data.next[value.endVertex.identify()][end.identify()] = start;
@@ -306,22 +244,10 @@
             var result = new Graph();
             edges.forEach(function (value, index) {
                 if (!(result.hasVertex(value.startVertex) && result.hasVertex(value.endVertex))) {
-                    var start = undefined;
-                    var end = undefined;
+                    var start = value.startVertex.clone();
+                    var end = value.endVertex.clone();
+                    ;
                     var edge = value.clone();
-
-                    if (result.hasVertex(value.startVertex)) {
-                        start = result.vertices[value.startVertex.identify()];
-                    } else {
-                        start = new Vertex();
-                        start.copy(value.startVertex);
-                    }
-                    if (result.hasVertex(value.endVertex)) {
-                        end = result.vertices[value.endVertex.identify()];
-                    } else {
-                        end = new Vertex();
-                        end.copy(value.endVertex);
-                    }
                     edge.startVertex = start;
                     edge.endVertex = end;
                     result.addEdge(edge);
@@ -330,7 +256,6 @@
 
             return result;
         };
-        Graph.infinity = 18437736874454810627;
         return Graph;
     })();
     _Graph.Graph = Graph;
