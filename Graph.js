@@ -52,9 +52,10 @@
             return result;
         };
 
-        Graph.prototype.getEdges = function (vertex) {
+        Graph.prototype.getEdges = function (vertex, bothWay) {
+            if (typeof bothWay === "undefined") { bothWay = true; }
             return this.edges.filter(function (value, index) {
-                return (value.startVertex.compare(vertex) === 0);
+                return (value.startVertex.compare(vertex) === 0 || (bothWay && !value.unidirected && value.endVertex.compare(vertex) === 0));
             });
         };
 
@@ -71,51 +72,40 @@
             }
         };
 
-        Graph.prototype.getEdge = function (startVertex, endVertex) {
-            var edges = this.getEdges(startVertex);
+        Graph.prototype.getEdge = function (startVertex, endVertex, bothWay) {
+            if (typeof bothWay === "undefined") { bothWay = true; }
+            var edges = this.getEdges(startVertex, bothWay);
             var edge;
             edges.forEach(function (value) {
                 if ((edge === undefined) && (value.endVertex.compare(endVertex) === 0)) {
                     edge = value;
                 }
             });
-            return undefined;
+            return edge;
         };
 
-        Graph.prototype.hasEdge = function (startVertex, endVertex) {
-            var edge = this.getEdge(startVertex, endVertex);
+        Graph.prototype.hasEdge = function (startVertex, endVertex, bothWay) {
+            if (typeof bothWay === "undefined") { bothWay = true; }
+            var edge = this.getEdge(startVertex, endVertex, bothWay);
             return (edge !== undefined);
         };
 
         Graph.prototype.addEdge = function (edge) {
-            if (edge !== undefined && !this.hasEdge(edge.startVertex, edge.endVertex)) {
+            var testEdge = this.getEdge(edge.startVertex, edge.endVertex, false);
+            var testEdge2 = this.getEdge(edge.endVertex, edge.startVertex, false);
+            if (edge !== undefined && ((testEdge === undefined) || (testEdge2 === undefined))) {
                 this.addVertex(edge.startVertex);
                 this.addVertex(edge.endVertex);
                 this.edges.push(edge);
-                if (!edge.unidirected) {
-                    var cloneEdge = edge.clone();
-                    cloneEdge.startVertex = edge.endVertex;
-                    cloneEdge.endVertex = edge.startVertex;
-                    this.edges.push(cloneEdge);
-                }
             }
         };
 
         Graph.prototype.removeEdge = function (startVertext, endVertext) {
-            var edge = this.getEdge(startVertext, endVertext);
+            var edge = this.getEdge(startVertext, endVertext, false);
             if (edge !== undefined) {
                 var index = this.edges.indexOf(edge);
                 if (index !== -1) {
                     this.edges.slice(index, 1);
-                }
-                if (edge.unidirected) {
-                    edge = this.getEdge(endVertext, startVertext);
-                    if (edge !== undefined) {
-                        index = this.edges.indexOf(edge);
-                        if (index !== -1) {
-                            this.edges.slice(index, 1);
-                        }
-                    }
                 }
             }
         };
@@ -184,6 +174,9 @@
             // the weight of the edge (u,v)
             this.edges.forEach(function (value, index) {
                 result.weight[value.startVertex.identify()][value.endVertex.identify()] = weightFunction(value);
+                if (!value.unidirected) {
+                    result.weight[value.endVertex.identify()][value.startVertex.identify()] = weightFunction(value);
+                }
             });
 
             // standard Floyd-Warshall implementation
@@ -244,12 +237,7 @@
             var result = new Graph();
             edges.forEach(function (value, index) {
                 if (!(result.hasVertex(value.startVertex) && result.hasVertex(value.endVertex))) {
-                    var start = value.startVertex.clone();
-                    var end = value.endVertex.clone();
-                    ;
                     var edge = value.clone();
-                    edge.startVertex = start;
-                    edge.endVertex = end;
                     result.addEdge(edge);
                 }
             });

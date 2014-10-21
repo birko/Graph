@@ -1,9 +1,8 @@
 ﻿module Graph {
     "use strict";
     export interface IVertex {
-        identify(): string;
-        clone(): IVertex;
         compare(value: IVertex): number;
+        identify(): string;
     }
 
     export class Edge {
@@ -56,9 +55,11 @@
             return result;
         }
 
-        getEdges(vertex: IVertex): Array<Edge> {
+        getEdges(vertex: IVertex, bothWay: boolean = true): Array<Edge> {
             return this.edges.filter(function (value: Edge, index: number): boolean {
-                return (value.startVertex.compare(vertex) === 0);
+                return (value.startVertex.compare(vertex) === 0 ||
+                    (bothWay && !value.unidirected && value.endVertex.compare(vertex) === 0)
+                );
             });
         }
 
@@ -75,51 +76,38 @@
             }
         }
 
-        getEdge(startVertex: IVertex, endVertex: IVertex): Edge {
-            var edges: Array<Edge> = this.getEdges(startVertex);
+        getEdge(startVertex: IVertex, endVertex: IVertex, bothWay: boolean = true): Edge {
+            var edges: Array<Edge> = this.getEdges(startVertex, bothWay);
             var edge: Edge;
             edges.forEach(function (value: Edge): void {
                 if ((edge === undefined) && (value.endVertex.compare(endVertex) === 0)) {
                     edge = value;
                 }
             });
-            return undefined;
+            return edge;
         }
 
-        hasEdge(startVertex: IVertex, endVertex: IVertex): boolean {
-            var edge: Edge = this.getEdge(startVertex, endVertex);
+        hasEdge(startVertex: IVertex, endVertex: IVertex, bothWay: boolean = true): boolean {
+            var edge: Edge = this.getEdge(startVertex, endVertex, bothWay);
             return (edge !== undefined);
         }
 
         addEdge(edge: Edge): void {
-            if (edge !== undefined && !this.hasEdge(edge.startVertex, edge.endVertex)) {
+            var testEdge: Edge = this.getEdge(edge.startVertex, edge.endVertex, false);
+            var testEdge2: Edge = this.getEdge(edge.endVertex, edge.startVertex, false);
+            if (edge !== undefined && ((testEdge === undefined) || (testEdge2 === undefined))) {
                 this.addVertex(edge.startVertex);
                 this.addVertex(edge.endVertex);
                 this.edges.push(edge);
-                if (!edge.unidirected) {
-                    var cloneEdge: Edge = edge.clone();
-                    cloneEdge.startVertex = edge.endVertex;
-                    cloneEdge.endVertex = edge.startVertex;
-                    this.edges.push(cloneEdge);
-                }
             }
         }
 
         removeEdge(startVertext: IVertex, endVertext: IVertex): void {
-            var edge: Edge = this.getEdge(startVertext, endVertext);
+            var edge: Edge = this.getEdge(startVertext, endVertext, false);
             if (edge !== undefined) {
                 var index: number = this.edges.indexOf(edge);
                 if (index !== -1) {
                     this.edges.slice(index, 1);
-                }
-                if (edge.unidirected) {
-                    edge = this.getEdge(endVertext, startVertext);
-                    if (edge !== undefined) {
-                        index = this.edges.indexOf(edge);
-                        if (index !== -1) {
-                            this.edges.slice(index, 1);
-                        }
-                    }
                 }
             }
         }
@@ -183,6 +171,9 @@
             // the weight of the edge (u,v)
             this.edges.forEach(function (value: Edge, index: number): void {
                 result.weight[value.startVertex.identify()][value.endVertex.identify()] = weightFunction(value);
+                if (!value.unidirected) {
+                    result.weight[value.endVertex.identify()][value.startVertex.identify()] = weightFunction(value);
+                }
             });
 
             // standard Floyd-Warshall implementation
@@ -248,13 +239,9 @@
                 return (weightFunction(e1) - weightFunction(e2));
             });
             var result: Graph = new Graph();
-            edges.forEach(function(value: Edge, index: number):void {
+            edges.forEach(function (value: Edge, index: number): void {
                 if (!(result.hasVertex(value.startVertex) && result.hasVertex(value.endVertex))) {
-                    var start: IVertex = value.startVertex.clone();
-                    var end: IVertex = value.endVertex.clone();;
                     var edge: Edge = value.clone();
-                    edge.startVertex = start;
-                    edge.endVertex = end;
                     result.addEdge(edge);
                 }
             });
