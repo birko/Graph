@@ -1,0 +1,21 @@
+﻿{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "declaration": true,
+    "noImplicitAny": true,
+    "outFile": "graph.js",
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "watch": true
+  },
+  "exclude": [
+    "*.d.ts"
+  ],
+  //"files": [
+  //],
+  "include": [
+    "*.ts"
+  ]
+}
